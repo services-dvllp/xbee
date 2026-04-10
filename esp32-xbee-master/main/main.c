@@ -42,17 +42,39 @@ static const char *TAG = "MAIN";
 static char *reset_reason_name(esp_reset_reason_t reason);
 
 static void reset_button_task() {
-    QueueHandle_t button_queue = button_init(PIN_BIT(GPIO_NUM_0));
+    const gpio_config_t reset_button_config = {
+        .pin_bit_mask = 1ULL << GPIO_NUM_0,
+        .mode = GPIO_MODE_INPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE
+    };
+
+    gpio_config(&reset_button_config);
     gpio_set_pull_mode(GPIO_NUM_0, GPIO_PULLUP_ONLY);
+
+    bool button_pressed = false;
+    TickType_t button_down_ticks = 0;
+    const TickType_t long_press_ticks = pdMS_TO_TICKS(5000);
+
     while (true) {
-        button_event_t button_ev;
-        if (xQueueReceive(button_queue, &button_ev, 1000 / portTICK_PERIOD_MS)) {
-            if (button_ev.event == BUTTON_DOWN && button_ev.duration > 5000) {
-                config_reset();
-                vTaskDelay(2000 / portTICK_PERIOD_MS);
-                esp_restart();
-            }
+        const bool is_pressed = gpio_get_level(GPIO_NUM_0) == 0;
+        const TickType_t now_ticks = xTaskGetTickCount();
+
+        if (is_pressed && !button_pressed) {
+            button_pressed = true;
+            button_down_ticks = now_ticks;
+        } else if (!is_pressed) {
+            button_pressed = false;
         }
+
+        if (button_pressed && (now_ticks - button_down_ticks) >= long_press_ticks) {
+            config_reset();
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            esp_restart();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
