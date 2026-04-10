@@ -29,6 +29,7 @@
 #include <retry.h>
 #include <freertos/event_groups.h>
 #include <esp_netif_ip_addr.h>
+#include <lwip/def.h>
 #include <lwip/lwip_napt.h>
 #include "wifi.h"
 #include "config.h"
@@ -278,7 +279,7 @@ void net_init() {
         config_get_primitive(CONF_ITEM(KEY_CONFIG_WIFI_AP_GATEWAY), &ip_info_ap.ip);
         ip_info_ap.gw = ip_info_ap.ip;
         uint8_t subnet = config_get_u8(CONF_ITEM(KEY_CONFIG_WIFI_STA_SUBNET));
-        ip_info_ap.netmask.addr = esp_netif_htonl(0xffffffffu << (32u - subnet));
+        ip_info_ap.netmask.addr = htonl(0xffffffffu << (32u - subnet));
 
         // IP forwarding/NATP
         if (config_get_bool1(CONF_ITEM(KEY_CONFIG_WIFI_STA_AP_FORWARD))) {
@@ -302,7 +303,7 @@ void net_init() {
             config_get_primitive(CONF_ITEM(KEY_CONFIG_WIFI_STA_IP), &ip_info_sta.ip);
             config_get_primitive(CONF_ITEM(KEY_CONFIG_WIFI_STA_GATEWAY), &ip_info_sta.gw);
             uint8_t subnet = config_get_u8(CONF_ITEM(KEY_CONFIG_WIFI_STA_SUBNET));
-            ip_info_sta.netmask.addr = esp_netif_htonl(0xffffffffu << (32u - subnet));
+            ip_info_sta.netmask.addr = htonl(0xffffffffu << (32u - subnet));
 
             esp_netif_dns_info_t dns_info_sta_main, dns_info_sta_backup;
             config_get_primitive(CONF_ITEM(KEY_CONFIG_WIFI_STA_DNS_A), &dns_info_sta_main.ip.u_addr.ip4.addr);
