@@ -22,6 +22,7 @@
 #include <driver/uart.h>
 #include <esp_wifi_types.h>
 #include <driver/gpio.h>
+#include <lwip/def.h>
 #include <uart.h>
 #include <tasks.h>
 #include "config.h"
@@ -284,7 +285,7 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_AP_GATEWAY,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = esp_netif_htonl(esp_netif_ip4_makeu32(192, 168, 4, 1))
+                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 4, 1))
         }, {
                 .key = KEY_CONFIG_WIFI_AP_SUBNET,
                 .type = CONFIG_ITEM_TYPE_UINT8,
@@ -321,11 +322,11 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_STA_IP,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = esp_netif_htonl(esp_netif_ip4_makeu32(192, 168, 0, 100))
+                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 0, 100))
         }, {
                 .key = KEY_CONFIG_WIFI_STA_GATEWAY,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = esp_netif_htonl(esp_netif_ip4_makeu32(192, 168, 0, 1))
+                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 0, 1))
         }, {
                 .key = KEY_CONFIG_WIFI_STA_SUBNET,
                 .type = CONFIG_ITEM_TYPE_UINT8,
@@ -333,11 +334,11 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_STA_DNS_A,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = esp_netif_htonl(esp_netif_ip4_makeu32(1, 1, 1, 1))
+                .def.uint32 = htonl(esp_netif_ip4_makeu32(1, 1, 1, 1))
         }, {
                 .key = KEY_CONFIG_WIFI_STA_DNS_B,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = esp_netif_htonl(esp_netif_ip4_makeu32(1, 0, 0, 1))
+                .def.uint32 = htonl(esp_netif_ip4_makeu32(1, 0, 0, 1))
         }
 };
 

@@ -564,7 +564,7 @@ static esp_err_t config_post_handler(httpd_req_t *req) {
                         a[b] = (uint8_t) strtoul(cJSON_GetArrayItem(entry, b)->valuestring, NULL, 10);
                     }
 ;
-                    uint32_t ip = esp_netif_htonl(esp_netif_ip4_makeu32(a[0], a[1], a[2], a[3]));
+                    uint32_t ip = htonl(esp_netif_ip4_makeu32(a[0], a[1], a[2], a[3]));
                     err = config_set_u32(item.key, ip);
                 }
             } else {

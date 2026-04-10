@@ -17,13 +17,20 @@
 
 #include <string.h>
 #include <esp_partition.h>
-#include <esp_core_dump.h>
 #include "core_dump.h"
+
+#if __has_include(<esp_core_dump.h>)
+#include <esp_core_dump.h>
+#define HAS_ESP_CORE_DUMP 1
+#else
+#define HAS_ESP_CORE_DUMP 0
+#endif
 
 static const esp_partition_t *core_dump_partition;
 static size_t core_dump_size = 0;
 
 void core_dump_check() {
+#if HAS_ESP_CORE_DUMP
     size_t core_dump_addr = 0;
     if (esp_core_dump_image_get(&core_dump_addr, &core_dump_size) != ESP_OK || core_dump_size == 0) {
         return;
@@ -31,6 +38,10 @@ void core_dump_check() {
 
     core_dump_partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA,
             ESP_PARTITION_SUBTYPE_DATA_COREDUMP, NULL);
+#else
+    core_dump_size = 0;
+    core_dump_partition = NULL;
+#endif
 }
 
 size_t core_dump_available() {
@@ -38,5 +49,9 @@ size_t core_dump_available() {
 }
 
 esp_err_t core_dump_read(size_t offset, void *buffer, size_t len) {
+    if (core_dump_partition == NULL) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
     return esp_partition_read(core_dump_partition, offset, buffer, len);
 }
