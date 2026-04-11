@@ -26,6 +26,7 @@ idf_component_register(
     REQUIRES
         # Core
         freertos
+        esp_ringbuf
         esp_system
         esp_event
 
@@ -47,6 +48,7 @@ idf_component_register(
         esp_http_server
         esp_http_client
         esp-tls
+        cjson
 
         # OTA
         app_update
