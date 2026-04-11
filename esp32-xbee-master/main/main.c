@@ -36,6 +36,7 @@
 #include "uart.h"
 #include "interface/ntrip.h"
 #include "tasks.h"
+#include "cJSON.h"
 
 static const char *TAG = "MAIN";
 
