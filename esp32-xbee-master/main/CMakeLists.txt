@@ -43,6 +43,7 @@ idf_component_register(
         # Networking
         esp_wifi
         lwip
+        esp_mdns
 
         # HTTP
         esp_http_server
