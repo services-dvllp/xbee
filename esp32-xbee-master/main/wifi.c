@@ -19,7 +19,6 @@
 #include <esp_wifi.h>
 #include <esp_log.h>
 #include <string.h>
-#include <mdns.h>
 #include <math.h>
 #include <driver/gpio.h>
 #include <sys/param.h>

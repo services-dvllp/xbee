@@ -19,7 +19,6 @@
 #include <esp_log.h>
 #include <esp_event_base.h>
 #include <sys/socket.h>
-#include <mdns.h>
 #include <tasks.h>
 #include <status_led.h>
 #include <stream_stats.h>
