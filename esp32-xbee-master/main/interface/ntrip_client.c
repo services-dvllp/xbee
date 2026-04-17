@@ -26,6 +26,7 @@
 #include <stream_stats.h>
 #include <freertos/event_groups.h>
 #include <esp_ota_ops.h>
+#include <esp_app_desc.h>
 #include "interface/ntrip.h"
 #include "config.h"
 #include "util.h"
@@ -136,7 +137,7 @@ static void ntrip_client_task(void *ctx) {
                 "User-Agent: NTRIP %s/%s" NEWLINE \
                 "Authorization: %s" NEWLINE
                 NEWLINE
-                , mountpoint, NTRIP_CLIENT_NAME, &esp_ota_get_app_description()->version[1], authorization);
+                , mountpoint, NTRIP_CLIENT_NAME, &esp_app_get_description()->version[1], authorization);
         free(authorization);
 
         int err = write(sock, buffer, strlen(buffer));
