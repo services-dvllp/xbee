@@ -29,7 +29,9 @@
 #include <lwip/inet.h>
 #include <lwip/def.h>
 #include <esp_ota_ops.h>
+#include <esp_app_desc.h>
 #include <esp_netif.h>
+#include <esp_timer.h>
 #include <stream_stats.h>
 #include <esp32/rom/crc.h>
 #include <lwip/sockets.h>
@@ -184,20 +186,21 @@ static esp_err_t basic_auth(httpd_req_t *req) {
 static esp_err_t hotspot_auth(httpd_req_t *req) {
     int sock = httpd_req_to_sockfd(req);
 
-    struct sockaddr_in6 client_addr;
-    socklen_t socklen = sizeof(client_addr);
-    getpeername(sock, (struct sockaddr *)&client_addr, &socklen);
+    struct sockaddr_storage local_addr;
+    socklen_t socklen = sizeof(local_addr);
+    if (getsockname(sock, (struct sockaddr *)&local_addr, &socklen) == 0) {
+        wifi_ap_status_t ap_status;
+        wifi_ap_status(&ap_status);
 
-    // TODO: Correctly read IPv4?
-    // ERROR_ACTION(TAG, client_addr.sin6_family != AF_INET, goto _auth_error, "IPv6 connections not supported, IP family %d", client_addr.sin6_family);
-
-    wifi_sta_list_t *ap_sta_list = wifi_ap_sta_list();
-    esp_netif_sta_list_t esp_netif_ap_sta_list;
-    esp_netif_get_sta_list(ap_sta_list, &esp_netif_ap_sta_list);
-
-    // TODO: Correctly read IPv4?
-    for (int i = 0; i < esp_netif_ap_sta_list.num; i++) {
-        if (esp_netif_ap_sta_list.sta[i].ip.addr == client_addr.sin6_addr.un.u32_addr[3]) return ESP_OK;
+        if (ap_status.active) {
+            if (local_addr.ss_family == AF_INET) {
+                struct sockaddr_in *ip4 = (struct sockaddr_in *)&local_addr;
+                if (ip4->sin_addr.s_addr == ap_status.ip4_addr.addr) return ESP_OK;
+            } else if (local_addr.ss_family == AF_INET6) {
+                struct sockaddr_in6 *ip6 = (struct sockaddr_in6 *)&local_addr;
+                if (memcmp(ip6->sin6_addr.s6_addr, ap_status.ip6_addr.addr, sizeof(ip6->sin6_addr.s6_addr)) == 0) return ESP_OK;
+            }
+        }
     }
 
     //_auth_error:
@@ -244,10 +247,10 @@ static esp_err_t core_dump_get_handler(httpd_req_t *req) {
 
     httpd_resp_set_type(req, "application/octet-stream");
 
-    const esp_app_desc_t *app_desc = esp_ota_get_app_description();
+    const esp_app_desc_t *app_desc = esp_app_get_description();
 
     char elf_sha256[7];
-    esp_ota_get_app_elf_sha256(elf_sha256, sizeof(elf_sha256));
+    esp_app_get_elf_sha256(elf_sha256, sizeof(elf_sha256));
 
     time_t t = time(NULL);
     char date[20] = "\0";
@@ -312,7 +315,7 @@ static esp_err_t file_check_etag_hash(httpd_req_t *req, char *file_hash_path, ch
             "Could not read hash file %s: %d %s", file_hash_path,
             errno, strerror(errno));
 
-    snprintf(etag, etag_size, "\"%08X\"", crc);
+    snprintf(etag, etag_size, "\"%08lX\"", (unsigned long) crc);
 
     // Compare to header sent by client
     size_t if_none_match_length = httpd_req_get_hdr_value_len(req, "If-None-Match") + 1;
@@ -321,13 +324,14 @@ static esp_err_t file_check_etag_hash(httpd_req_t *req, char *file_hash_path, ch
         httpd_req_get_hdr_value_str(req, "If-None-Match", if_none_match, if_none_match_length);
 
         bool header_match = strcmp(etag, if_none_match) == 0;
-        free(if_none_match);
 
         // Matching ETag, return not modified
         if (header_match) {
+            free(if_none_match);
             return ESP_OK;
         } else {
             ESP_LOGW(TAG, "ETag for file %s sent by client does not match (%s != %s)", file_hash_path, etag, if_none_match);
+            free(if_none_match);
             return ESP_ERR_INVALID_CRC;
         }
     }
@@ -427,7 +431,7 @@ static esp_err_t config_get_handler(httpd_req_t *req) {
 
     cJSON *root = cJSON_CreateObject();
 
-    const esp_app_desc_t *app_desc = esp_ota_get_app_description();
+    const esp_app_desc_t *app_desc = esp_app_get_description();
     cJSON_AddStringToObject(root, "version", app_desc->version);
 
     int config_item_count;
