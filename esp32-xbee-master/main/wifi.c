@@ -32,7 +32,6 @@
 #include <esp_idf_version.h>
 #include <esp_mac.h>
 #include <lwip/def.h>
-#include <lwip/lwip_napt.h>
 #include "wifi.h"
 #include "config.h"
 
@@ -184,12 +183,8 @@ static void handle_ap_start(void *esp_netif, esp_event_base_t base, int32_t even
 
     // IP forwarding/NATP
     if (config_get_bool1(CONF_ITEM(KEY_CONFIG_WIFI_STA_AP_FORWARD))) {
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 0)
+#if ESP_IDF_VERSION_MAJOR >= 5
         ESP_ERROR_CHECK(esp_netif_napt_enable(esp_netif_ap));
-#else
-        esp_netif_ip_info_t ip_info_ap;
-        esp_netif_get_ip_info(esp_netif_ap, &ip_info_ap);
-        ip_napt_enable(ip_info_ap.ip.addr, 1);
 #endif
     }
 
@@ -205,8 +200,10 @@ static void handle_ap_stop(void *esp_netif, esp_event_base_t base, int32_t event
 static void handle_ap_sta_connected(void *esp_netif, esp_event_base_t base, int32_t event_id, void *event_data) {
     const wifi_event_ap_staconnected_t *event = (const wifi_event_ap_staconnected_t *) event_data;
 
-    ESP_LOGI(TAG, "WIFI_EVENT_AP_STACONNECTED: mac: " MACSTR, MAC2STR(event->mac));
-    uart_nmea("$PESP,WIFI,AP,STA_CONNECTED," MACSTR, MAC2STR(event->mac));
+    ESP_LOGI(TAG, "WIFI_EVENT_AP_STACONNECTED: mac: %02X:%02X:%02X:%02X:%02X:%02X",
+            event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
+    uart_nmea("$PESP,WIFI,AP,STA_CONNECTED,%02X:%02X:%02X:%02X:%02X:%02X",
+            event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
 
     xEventGroupSetBits(wifi_event_group, WIFI_AP_STA_CONNECTED_BIT);
 
@@ -216,8 +213,10 @@ static void handle_ap_sta_connected(void *esp_netif, esp_event_base_t base, int3
 static void handle_ap_sta_disconnected(void *esp_netif, esp_event_base_t base, int32_t event_id, void *event_data) {
     const wifi_event_ap_stadisconnected_t *event = (const wifi_event_ap_stadisconnected_t *) event_data;
 
-    ESP_LOGI(TAG, "WIFI_EVENT_AP_STADISCONNECTED: mac: " MACSTR, MAC2STR(event->mac));
-    uart_nmea("$PESP,WIFI,AP,STA_DISCONNECTED," MACSTR, MAC2STR(event->mac));
+    ESP_LOGI(TAG, "WIFI_EVENT_AP_STADISCONNECTED: mac: %02X:%02X:%02X:%02X:%02X:%02X",
+            event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
+    uart_nmea("$PESP,WIFI,AP,STA_DISCONNECTED,%02X:%02X:%02X:%02X:%02X:%02X",
+            event->mac[0], event->mac[1], event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
 
     wifi_ap_sta_list();
     if (ap_sta_list.num == 0) {
