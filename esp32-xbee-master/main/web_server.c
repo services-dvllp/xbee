@@ -27,6 +27,7 @@
 #include <core_dump.h>
 #include <util.h>
 #include <lwip/inet.h>
+#include <lwip/def.h>
 #include <esp_ota_ops.h>
 #include <esp_netif_sta_list.h>
 #include <stream_stats.h>
@@ -45,6 +46,8 @@
 static const char *TAG = "WEB";
 
 static char *buffer;
+
+#define IP4_ADDR_U32(a, b, c, d) PP_HTONL(LWIP_MAKEU32(a, b, c, d))
 
 enum auth_method {
     AUTH_METHOD_OPEN = 0,
@@ -562,8 +565,8 @@ static esp_err_t config_post_handler(httpd_req_t *req) {
                     for (int b = 0; b < 4; b++) {
                         a[b] = (uint8_t) strtoul(cJSON_GetArrayItem(entry, b)->valuestring, NULL, 10);
                     }
-;
-                    uint32_t ip = htonl(esp_netif_ip4_makeu32(a[0], a[1], a[2], a[3]));
+
+                    uint32_t ip = IP4_ADDR_U32(a[0], a[1], a[2], a[3]);
                     err = config_set_u32(item.key, ip);
                 }
             } else {
