@@ -34,6 +34,7 @@ idf_component_register(
         nvs_flash
         esp_partition
         spi_flash
+        esp_spiffs
 
         # Drivers (v6 split)
         esp_driver_uart

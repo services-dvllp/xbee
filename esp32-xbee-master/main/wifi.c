@@ -27,7 +27,10 @@
 #include <status_led.h>
 #include <retry.h>
 #include <freertos/event_groups.h>
+#include <esp_netif.h>
 #include <esp_netif_ip_addr.h>
+#include <esp_idf_version.h>
+#include <esp_mac.h>
 #include <lwip/def.h>
 #include <lwip/lwip_napt.h>
 #include "wifi.h"
@@ -134,7 +137,9 @@ static void handle_sta_disconnected(void *esp_netif, esp_event_base_t base, int3
         case WIFI_REASON_AUTH_EXPIRE:
         case WIFI_REASON_4WAY_HANDSHAKE_TIMEOUT:
         case WIFI_REASON_AUTH_FAIL:
+#ifdef WIFI_REASON_ASSOC_EXPIRE
         case WIFI_REASON_ASSOC_EXPIRE:
+#endif
         case WIFI_REASON_HANDSHAKE_TIMEOUT:
             reason = "AUTH";
             break;
@@ -179,9 +184,13 @@ static void handle_ap_start(void *esp_netif, esp_event_base_t base, int32_t even
 
     // IP forwarding/NATP
     if (config_get_bool1(CONF_ITEM(KEY_CONFIG_WIFI_STA_AP_FORWARD))) {
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 1, 0)
+        ESP_ERROR_CHECK(esp_netif_napt_enable(esp_netif_ap));
+#else
         esp_netif_ip_info_t ip_info_ap;
         esp_netif_get_ip_info(esp_netif_ap, &ip_info_ap);
         ip_napt_enable(ip_info_ap.ip.addr, 1);
+#endif
     }
 
     ap_active = true;
