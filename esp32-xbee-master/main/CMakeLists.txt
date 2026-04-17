@@ -34,7 +34,7 @@ idf_component_register(
         nvs_flash
         esp_partition
         spi_flash
-        esp_spiffs
+        spiffs
 
         # Drivers (v6 split)
         esp_driver_uart
@@ -44,7 +44,7 @@ idf_component_register(
         # Networking
         esp_wifi
         lwip
-        esp_mdns
+        mdns
 
         # HTTP
         esp_http_server
