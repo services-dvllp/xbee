@@ -259,9 +259,9 @@ static void handle_sta_lost_ip(void *esp_netif, esp_event_base_t base, int32_t e
 }
 
 static void handle_ap_sta_ip_assigned(void *esp_netif, esp_event_base_t base, int32_t event_id, void *event_data) {
-    const ip_event_ap_staipassigned_t *event = (const ip_event_ap_staipassigned_t *) event_data;
+    const ip_event_assigned_ip_to_client_t *event = (const ip_event_assigned_ip_to_client_t *) event_data;
 
-    ESP_LOGI(TAG, "IP_EVENT_AP_STAIPASSIGNED: ip: " IPSTR, IP2STR(&event->ip));
+    ESP_LOGI(TAG, "IP_EVENT_ASSIGNED_IP_TO_CLIENT: ip: " IPSTR, IP2STR(&event->ip));
     uart_nmea("$PESP,WIFI,AP,STA_IP_ASSIGNED," IPSTR, IP2STR(&event->ip));
 }
 
@@ -343,7 +343,7 @@ void wifi_init() {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &handle_ap_sta_disconnected, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &handle_sta_got_ip, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_LOST_IP, &handle_sta_lost_ip, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_AP_STAIPASSIGNED, &handle_ap_sta_ip_assigned, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_ASSIGNED_IP_TO_CLIENT, &handle_ap_sta_ip_assigned, NULL));
 
     // Reconnect delay timer
     delay_handle = retry_init(true, 5, 2000, 60000);
@@ -408,7 +408,7 @@ void wifi_init() {
                 ffs(~ip_info_ap.netmask.addr) - 1);
 
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &config_ap));
-        ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW_HT20));
+        ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_AP, WIFI_BW20));
 
         config_color_t ap_led_color = config_get_color(CONF_ITEM(KEY_CONFIG_WIFI_AP_COLOR));
         if (ap_led_color.rgba != 0) status_led_ap = status_led_add(ap_led_color.rgba, STATUS_LED_STATIC, 500, 2000, 0);
@@ -434,7 +434,7 @@ void wifi_init() {
                 config_sta.sta.scan_method == WIFI_ALL_CHANNEL_SCAN ? 'A' : 'F');
 
         ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &config_sta));
-        ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20));
+        ESP_ERROR_CHECK(esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW20));
 
         // Keep track of connection for RSSI indicator, but suspend until connected
         xTaskCreate(wifi_sta_status_task, "wifi_sta_status", 2048, NULL, TASK_PRIORITY_WIFI_STATUS, &sta_status_task);
