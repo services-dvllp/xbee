@@ -29,7 +29,7 @@
 #include <lwip/inet.h>
 #include <lwip/def.h>
 #include <esp_ota_ops.h>
-#include <esp_netif_sta_list.h>
+#include <esp_netif.h>
 #include <stream_stats.h>
 #include <esp32/rom/crc.h>
 #include <lwip/sockets.h>
