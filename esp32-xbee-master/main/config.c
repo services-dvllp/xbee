@@ -29,6 +29,7 @@
 
 static const char *TAG = "CONFIG";
 static const char *STORAGE = "config";
+#define IP4_ADDR_U32(a, b, c, d) PP_HTONL(LWIP_MAKEU32(a, b, c, d))
 
 nvs_handle_t config_handle;
 
@@ -285,7 +286,7 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_AP_GATEWAY,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 4, 1))
+                .def.uint32 = IP4_ADDR_U32(192, 168, 4, 1)
         }, {
                 .key = KEY_CONFIG_WIFI_AP_SUBNET,
                 .type = CONFIG_ITEM_TYPE_UINT8,
@@ -322,11 +323,11 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_STA_IP,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 0, 100))
+                .def.uint32 = IP4_ADDR_U32(192, 168, 0, 100)
         }, {
                 .key = KEY_CONFIG_WIFI_STA_GATEWAY,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = htonl(esp_netif_ip4_makeu32(192, 168, 0, 1))
+                .def.uint32 = IP4_ADDR_U32(192, 168, 0, 1)
         }, {
                 .key = KEY_CONFIG_WIFI_STA_SUBNET,
                 .type = CONFIG_ITEM_TYPE_UINT8,
@@ -334,11 +335,11 @@ const config_item_t CONFIG_ITEMS[] = {
         }, {
                 .key = KEY_CONFIG_WIFI_STA_DNS_A,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = htonl(esp_netif_ip4_makeu32(1, 1, 1, 1))
+                .def.uint32 = IP4_ADDR_U32(1, 1, 1, 1)
         }, {
                 .key = KEY_CONFIG_WIFI_STA_DNS_B,
                 .type = CONFIG_ITEM_TYPE_IP,
-                .def.uint32 = htonl(esp_netif_ip4_makeu32(1, 0, 0, 1))
+                .def.uint32 = IP4_ADDR_U32(1, 0, 0, 1)
         }
 };
 
@@ -606,7 +607,8 @@ esp_err_t config_commit() {
     return nvs_commit(config_handle);
 }
 
-static void config_restart_task() {
+static void config_restart_task(void *arg) {
+    (void) arg;
     vTaskDelay(pdMS_TO_TICKS(1000));
     esp_restart();
 }
